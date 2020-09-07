@@ -39,12 +39,12 @@
 
 #define DOOYA_MIDVALUE 384 / RAWSIGNAL_SAMPLE_RATE
 
-#define DOOYA_PULSEMIN 1600 / RAWSIGNAL_SAMPLE_RATE
-#define DOOYA_PULSEMINMAX 2200 / RAWSIGNAL_SAMPLE_RATE
-#define DOOYA_PULSEMAXMIN 3000 / RAWSIGNAL_SAMPLE_RATE
+// #define DOOYA_PULSEMIN 1600 / RAWSIGNAL_SAMPLE_RATE
+// #define DOOYA_PULSEMINMAX 2200 / RAWSIGNAL_SAMPLE_RATE
+// #define DOOYA_PULSEMAXMIN 3000 / RAWSIGNAL_SAMPLE_RATE
 
-#define DOOYA_NEAR_SYNC_START 36000
-#define DOOYA_EXACT_SYNC_END_1   0x1380
+// #define DOOYA_NEAR_SYNC_START 36000
+// #define DOOYA_EXACT_SYNC_END_1   0x1380
 // #define DOOYA_EXACT_SYNC_END_2   0x079C
 // #define DOOYA_EXACT_SYNC_END_3   0x119C
 // #define DOOYA_EXACT_SYNC_END_4   0x139C
@@ -74,7 +74,7 @@ boolean Plugin_083(byte function, char *string)
 
    int i;
 
-   int last_byte = RawSignal.Pulses[RawSignal.Number-1]*0x100 + RawSignal.Pulses[RawSignal.Number];
+   // int last_byte = RawSignal.Pulses[RawSignal.Number-1]*0x100 + RawSignal.Pulses[RawSignal.Number];
    char dbuffer[64];
 
       if (RawSignal.Number == DOOYA_PULSECOUNT_1 
@@ -83,14 +83,16 @@ boolean Plugin_083(byte function, char *string)
       {
          byte bbuffer[128];
 
+#ifdef PLUGIN_083_DEBUG
          sprintf_P(dbuffer, PSTR("Pulses %04d Multiply %04d Delay %04d : "), 
             RawSignal.Number, RawSignal.Multiply, RawSignal.Delay);
          Serial.print(dbuffer);
+#endif
 
          int j;
          int buffer_index=0;
 
-         // // Skip start and end sequence
+         // // Skip start [1] & [2] and end sequence
          for (j = 3; j < RawSignal.Number-1; j+=8)
          {
             byte short_bitstream=0;
@@ -111,18 +113,21 @@ boolean Plugin_083(byte function, char *string)
             }
 
             bbuffer[buffer_index++]=short_bitstream;
+#ifdef PLUGIN_083_DEBUG
             sprintf(dbuffer, "0x%x ", short_bitstream);
             Serial.print(dbuffer);
+#endif
          }
+
+#ifdef PLUGIN_083_DEBUG
          sprintf_P(dbuffer, PSTR("END %02x%02x"), RawSignal.Pulses[RawSignal.Number-1], RawSignal.Pulses[RawSignal.Number]);
          Serial.print(dbuffer);
-
          Serial.print(F(";\r\n"));
+#endif
          /**
           * bbuffer :
           * [0-5] : ID
-          * [6]
-          * [7] : Channel
+          * [6-7] : Channel
           * [8-9] : COMMAND
           **/
 
@@ -159,8 +164,10 @@ boolean Plugin_083(byte function, char *string)
       } 
       else 
       {
+#ifdef PLUGIN_083_DEBUG
          sprintf_P(dbuffer, PSTR("Pulses %04d END %02x%02x"), RawSignal.Number, RawSignal.Pulses[RawSignal.Number-1], RawSignal.Pulses[RawSignal.Number]);
          Serial.println(dbuffer);
+#endif
          return false;
       }  
 
@@ -182,25 +189,9 @@ boolean Plugin_083(byte function, char *string)
 #define DOOYA_RFLOW   192
 #define DOOYA_RFHIGH  608
 
-// void addLowHighSignalPulses(unsigned long low, unsigned long high, 
-//    unsigned long value, int size, int *currrentPulses)  {
-//    for (byte x = (*currrentPulses + size*2); x >= *currrentPulses; x = x - 2)
-//    {
-//       if ((value & 1) == 1)
-//       {
-//          RawSignal.Pulses[x] = low / RawSignal.Multiply;
-//          RawSignal.Pulses[x - 1] = high / RawSignal.Multiply;
-//       }
-//       else
-//       {
-//          RawSignal.Pulses[x] = high / RawSignal.Multiply;
-//          RawSignal.Pulses[x - 1] = low / RawSignal.Multiply;
-//       }
-//       value = value >> 1;
-//    }
-//    *currrentPulses+=size*2;
-// }
-
+/**
+ * Convert Hex character to Hex value
+ **/
 byte nibble2c(char c)
 {
    if ((c>='0') && (c<='9'))
@@ -212,33 +203,47 @@ byte nibble2c(char c)
    return -1 ;
 }
 
-void addLowHighSignalPulses(unsigned long low, unsigned long high, 
-   char * hexvalue, int size, int *currrentPulses)  {
-   // for (byte x = *currrentPulses; x <= (*currrentPulses + size*2); x = x + 2)
+/*
+ * Add High et Low signal pulses to pulses array.
+ * Each bit from hex string will be encoded as High pulse and Low pulse
+ * hexvalue : Hex String to encode.
+ */
+void addHighLowSignalPulses(unsigned long high, unsigned long low, 
+   char * hexvalue, int *currrentPulses)  {
+
    int i=0;
    while (*(hexvalue+i) != '\0') 
    {
+#ifdef PLUGIN_083_DEBUG
       Serial.print(*(hexvalue+i));
       Serial.print("(");
+#endif
 
       byte value = nibble2c(*(hexvalue+i));
       for (int x=0; x < 4; x++)
       {
          if ((value & B1000) == B1000)
          {
+#ifdef PLUGIN_083_DEBUG
             Serial.print("1");
+#endif
             RawSignal.Pulses[(*currrentPulses)++] = high / RawSignal.Multiply;
             RawSignal.Pulses[(*currrentPulses)++] = low / RawSignal.Multiply;
          }
          else
          {
+#ifdef PLUGIN_083_DEBUG
             Serial.print("0");
+#endif
             RawSignal.Pulses[(*currrentPulses)++] = low / RawSignal.Multiply;
             RawSignal.Pulses[(*currrentPulses)++] = high / RawSignal.Multiply;
          }
          value = value << 1;
       }
+#ifdef PLUGIN_083_DEBUG
       Serial.print(")");
+#endif
+
       i++;
    }
 }
@@ -259,6 +264,7 @@ void debugRawSignal(int size)
 
    Serial.println();
 }
+
 void sendRF(int currentPulses) 
 {
    noInterrupts();
@@ -283,14 +289,18 @@ void addSinglePulse(unsigned long value, int *currrentPulses)
 
 boolean PluginTX_083(byte function, char *string)
 {
+#ifdef PLUGIN_083_DEBUG
    Serial.println(F("PluginTX_083"));
+#endif
 
-   char dbuffer[30] ;
    boolean success = false;
    unsigned long bitstream = 0L;
 
+#ifdef PLUGIN_083_DEBUG
+   char dbuffer[30] ;
    sprintf_P(dbuffer, PSTR("%s"), string);
    Serial.println(dbuffer);
+#endif
 
    //20;XX;DEBUG;Pulses=82;Pulses(uSec)=4704,1472,192,608,192,608,512,288,192,608,512,288,192,608,512,288,512,320,192,608,512,288,192,608,192,608,192,608,192,608,192,608,192,640,512,288,512,320,192,640,192,640,512,288,192,640,192,608,192,640,192,640,192,608,192,640,192,640,512,320,512,320,512,320,512,352,160,640,192,640,192,640,512,320,512,320,512,320,512,320,192,4992;
 
@@ -304,16 +314,11 @@ boolean PluginTX_083(byte function, char *string)
 
    if (strncasecmp(string + 3, "BrelMotor;", 10) == 0)
    {
-   //    // Override with 0x to conform strtoul base 16
-   //    string[11]='0';
-   //    string[12]='x';
-   // sprintf_P(dbuffer, PSTR("%s"), string);
-   // Serial.println(dbuffer);
-
       int command;
       char *strings[10];
       char *ptr = NULL;
 
+      // Tokenize input string
       byte index = 0;
       ptr = strtok(string, ";");  // takes a list of delimiters
       while(ptr != NULL)
@@ -327,8 +332,10 @@ boolean PluginTX_083(byte function, char *string)
       char * subaddress = strings[3];
       char * commandstring = strings[4];
 
+#ifdef PLUGIN_083_DEBUG
       sprintf_P(dbuffer, PSTR("Send BrelMotor %s %s"), address, subaddress);
       Serial.println(dbuffer);
+#endif
 
       if (strncasecmp(commandstring, "on", 2) == 0)
          command = DOOYA_UP_COMMAND;
@@ -347,12 +354,13 @@ boolean PluginTX_083(byte function, char *string)
       if (command == 0)
          return false;
 
+#ifdef PLUGIN_083_DEBUG
       sprintf_P(dbuffer, PSTR("Send BrelMotor %s %s %s"), address, subaddress, command);
       Serial.println(dbuffer);
+#endif
 
       RawSignal.Repeats = 5;
       RawSignal.Multiply = 32;
-     // AC_Send(ADDRESS << 2 && SWITCH, command);
 
       int currentPulses=0;
 
@@ -360,10 +368,11 @@ boolean PluginTX_083(byte function, char *string)
       addSinglePulse(DOOYA_RFSTART_0, &currentPulses);
       addSinglePulse(DOOYA_RFSTART_1, &currentPulses);
       // add Body
-      addLowHighSignalPulses(DOOYA_RFLOW, DOOYA_RFHIGH, address, 6*8, &currentPulses);
-      addLowHighSignalPulses(DOOYA_RFLOW, DOOYA_RFHIGH, subaddress, 2*8, &currentPulses);
-      sprintf_P(dbuffer, PSTR("%x"), command);
-      addLowHighSignalPulses(DOOYA_RFLOW, DOOYA_RFHIGH, dbuffer, 2*8, &currentPulses);
+      addHighLowSignalPulses(DOOYA_RFHIGH, DOOYA_RFLOW, address, &currentPulses);
+      addHighLowSignalPulses(DOOYA_RFHIGH, DOOYA_RFLOW, subaddress, &currentPulses);
+      char buffercommand[3];
+      sprintf_P(buffercommand, PSTR("%2x"), command);
+      addHighLowSignalPulses(DOOYA_RFHIGH, DOOYA_RFLOW, buffercommand, &currentPulses);
       // add Footer
       addSinglePulse(0, &currentPulses);
       addSinglePulse(DOOYA_RFEND_0, &currentPulses);
@@ -371,90 +380,15 @@ boolean PluginTX_083(byte function, char *string)
       RawSignal.Number = currentPulses;
       debugRawSignal(currentPulses);
 
+      // Amplify signal length from 32 (receipt) to 38 (emission)
       RawSignal.Multiply = 38;
       sendRF(currentPulses);
 
       return true;
 
-      //-----------------------------------------------
-      RawSignal.Multiply = 50;
-      RawSignal.Repeats = 10;
-      RawSignal.Delay = 20;
-      RawSignal.Pulses[currentPulses++] = DOOYA_RFLOW / RawSignal.Multiply;
-      RawSignal.Pulses[currentPulses++] = DOOYA_RFLOW / RawSignal.Multiply;
-
-      // addLowHighSignalPulses(DOOYA_RFLOW, DOOYA_RFHIGH, ADDRESS, &currrentPulses, 6*8);
-
-      // addLowHighSignalPulses(DOOYA_RFLOW, DOOYA_RFHIGH, SWITCH, &currrentPulses, 2*8);
-
-      // addLowHighSignalPulses(DOOYA_RFLOW, DOOYA_RFHIGH, command, &currrentPulses, 2*8);
-
-      RawSignal.Number = currentPulses;
-
-      sprintf_P(dbuffer, PSTR("Pulses %04d END %02x%02x"), RawSignal.Number, RawSignal.Pulses[RawSignal.Number-1], RawSignal.Pulses[RawSignal.Number]);
-      Serial.println(dbuffer);
-
-      return true;
-
-      // RawSendRF();
-      success = true;
-      //-----------------------------------------------
    }
-   return success;
+   return false;
 }
-
-// void Deltronic_Send(unsigned long address)
-// {
-//     byte repeatTimes = 16;
-//     byte repeat, index;
-//     int periodLong, periodSync;
-//     unsigned long bitmask;
-//     int period = 640;
-
-//     periodLong = 2 * period;
-//     periodSync = 36 * period;
-
-//     // Send seperator
-//     digitalWrite(PIN_RF_TX_DATA, HIGH);
-//     delayMicroseconds(period);
-
-//     // Send sync
-//     digitalWrite(PIN_RF_TX_DATA, LOW);
-//     delayMicroseconds(periodSync);
-//     digitalWrite(PIN_RF_TX_DATA, HIGH);
-//     delayMicroseconds(period);
-
-//     for (repeat = 0; repeat < repeatTimes; repeat++)
-//     {
-//         bitmask = 0x00000800L;
-//         for (index = 0; index < 12; index++)
-//         {
-//             if (address & bitmask)
-//             {
-//                 // Send 1
-//                 digitalWrite(PIN_RF_TX_DATA, LOW);
-//                 delayMicroseconds(periodLong);
-//                 digitalWrite(PIN_RF_TX_DATA, HIGH);
-//                 delayMicroseconds(period);
-//             }
-//             else
-//             {
-//                 // Send 0
-//                 digitalWrite(PIN_RF_TX_DATA, LOW);
-//                 delayMicroseconds(period);
-//                 digitalWrite(PIN_RF_TX_DATA, HIGH);
-//                 delayMicroseconds(periodLong);
-//             }
-//             bitmask >>= 1;
-//         }
-//         // Send sync
-//         digitalWrite(PIN_RF_TX_DATA, LOW);
-//         delayMicroseconds(periodSync);
-//         digitalWrite(PIN_RF_TX_DATA, HIGH);
-//         delayMicroseconds(period);
-//     }
-//     digitalWrite(PIN_RF_TX_DATA, LOW);
-// }
 
 #endif // PLUGIN_083
 
