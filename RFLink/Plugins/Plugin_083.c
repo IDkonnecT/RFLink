@@ -6,9 +6,9 @@
  * This plugin takes care of decoding and encoding the Brel Motor / Dooya protocol (DC318/DC114)
  * 
  * Author  (present)  : Sebastien LANGE
- * Support (present)  : https://github.com/couin3/RFLink 
+ * Support (present)  : https://github.com/basty149/RFLink 
  * Author  (original) : Sebastien LANGE
- * Support (original) : https://github.com/couin3/RFLink 
+ * Support (original) : https://github.com/basty149/RFLink 
  * License            : This code is free for use in any open source project when this header is included.
  *                      Usage of any parts of this code in a commercial application is prohibited!
  *********************************************************************************************
@@ -28,30 +28,10 @@
  * 20;XX;DEBUG;Pulses=82;Pulses(uSec)=4640,1504,192,640,192,640,512,320,192,608,512,320,192,640,480,320,480,352,160,640,512,320,192,640,160,640,192,640,160,640,160,640,192,640,512,320,480,320,160,640,160,640,480,320,160,640,160,640,160,672,160,640,192,640,192,640,192,640,192,640,192,640,192,640,512,352,160,640,160,640,160,640,512,320,512,320,512,320,480,320,160,4992;
  \*********************************************************************************************/
 #define DOOYA_PLUGIN_ID 083
-#define PLUGIN_DESC_083 PSTR("DOOYA")
+#define PLUGIN_DESC_083 PSTR("BRELMOTOR")
 #define DOOYA_PULSECOUNT_1 82
-// #define DOOYA_PULSECOUNT_2 54
-// #define DOOYA_PULSECOUNT_3 60
-// #define DOOYA_PULSECOUNT_4 62
-// #define DOOYA_PULSECOUNT_5 68
-// #define DOOYA_PULSECOUNT_6 72
-// #define DOOYA_PULSECOUNT_6 84
 
 #define DOOYA_MIDVALUE 384 / RAWSIGNAL_SAMPLE_RATE
-
-// #define DOOYA_PULSEMIN 1600 / RAWSIGNAL_SAMPLE_RATE
-// #define DOOYA_PULSEMINMAX 2200 / RAWSIGNAL_SAMPLE_RATE
-// #define DOOYA_PULSEMAXMIN 3000 / RAWSIGNAL_SAMPLE_RATE
-
-// #define DOOYA_NEAR_SYNC_START 36000
-// #define DOOYA_EXACT_SYNC_END_1   0x1380
-// #define DOOYA_EXACT_SYNC_END_2   0x079C
-// #define DOOYA_EXACT_SYNC_END_3   0x119C
-// #define DOOYA_EXACT_SYNC_END_4   0x139C
-// #define DOOYA_EXACT_SYNC_END_5   0x129C
-// #define DOOYA_EXACT_SYNC_END_6   0x069C
-// #define DOOYA_EXACT_SYNC_END_7   0x109C
-// #define DOOYA_EXACT_SYNC_END_8   0x0e9C
 
 #define DOOYA_UP_COMMAND    0x11 // 0001 0001
 #define DOOYA_STOP_COMMAND  0x55 // 0101 0101
@@ -64,22 +44,9 @@
 
 boolean Plugin_083(byte function, char *string)
 {
-   // if ((RawSignal.Number != DOOYA_PULSECOUNT_1)
-   //    && (RawSignal.Number != DOOYA_PULSECOUNT_2)
-   //    && (RawSignal.Number != DOOYA_PULSECOUNT_3)
-   //    && (RawSignal.Number != DOOYA_PULSECOUNT_4)
-   //    && (RawSignal.Number != DOOYA_PULSECOUNT_5)
-   //    && (RawSignal.Number != DOOYA_PULSECOUNT_6))
-   //    return false;
-
-   int i;
-
-   // int last_byte = RawSignal.Pulses[RawSignal.Number-1]*0x100 + RawSignal.Pulses[RawSignal.Number];
    char dbuffer[64];
 
-      if (RawSignal.Number == DOOYA_PULSECOUNT_1 
-         // && last_byte  == DOOYA_EXACT_SYNC_END_1
-         ) 
+      if ( RawSignal.Number == DOOYA_PULSECOUNT_1 ) 
       {
          byte bbuffer[128];
 
@@ -89,15 +56,14 @@ boolean Plugin_083(byte function, char *string)
          Serial.print(dbuffer);
 #endif
 
-         int j;
          int buffer_index=0;
 
          // // Skip start [1] & [2] and end sequence
-         for (j = 3; j < RawSignal.Number-1; j+=8)
+         for (int j = 3; j < RawSignal.Number-1; j+=8)
          {
             byte short_bitstream=0;
    
-            for (i = 0; i < 8; i+=2)
+            for (int i = 0; i < 8; i+=2)
             {
                short_bitstream <<= 1; // Always shift
 
@@ -113,6 +79,7 @@ boolean Plugin_083(byte function, char *string)
             }
 
             bbuffer[buffer_index++]=short_bitstream;
+
 #ifdef PLUGIN_083_DEBUG
             sprintf(dbuffer, "0x%x ", short_bitstream);
             Serial.print(dbuffer);
@@ -138,11 +105,6 @@ boolean Plugin_083(byte function, char *string)
                         +bbuffer[4]*0x10
                         +bbuffer[5];
 
-         display_Header();
-         display_Name(PSTR("BrelMotor"));
-         display_IDn(address, 6);
-         display_SWITCH(bbuffer[7]);
-
          int command = bbuffer[8]*0x10+bbuffer[9];
 
          switch (command)
@@ -159,7 +121,14 @@ boolean Plugin_083(byte function, char *string)
          case DOOYA_SETUP_COMMAND:
             display_Name(PSTR("CMD=SETUP"));
             break;
+         default :
+            return false;
          } 
+
+         display_Header();
+         display_Name(PSTR("BrelMotor"));
+         display_IDn(address, 6);
+         display_SWITCH(bbuffer[7]);
          display_Footer();
       } 
       else 
@@ -192,7 +161,7 @@ boolean Plugin_083(byte function, char *string)
 /**
  * Convert Hex character to Hex value
  **/
-byte nibble2c(char c)
+byte hexchar2hexvalue(char c)
 {
    if ((c>='0') && (c<='9'))
       return c-'0' ;
@@ -219,7 +188,7 @@ void addHighLowSignalPulses(unsigned long high, unsigned long low,
       Serial.print("(");
 #endif
 
-      byte value = nibble2c(*(hexvalue+i));
+      byte value = hexchar2hexvalue(*(hexvalue+i));
       for (int x=0; x < 4; x++)
       {
          if ((value & B1000) == B1000)
@@ -323,8 +292,7 @@ boolean PluginTX_083(byte function, char *string)
       ptr = strtok(string, ";");  // takes a list of delimiters
       while(ptr != NULL)
       {
-         strings[index] = ptr;
-         index++;
+         strings[index++] = ptr;
          ptr = strtok(NULL, ";");  // takes a list of delimiters
       }
 
@@ -378,7 +346,9 @@ boolean PluginTX_083(byte function, char *string)
       addSinglePulse(DOOYA_RFEND_0, &currentPulses);
 
       RawSignal.Number = currentPulses;
+#ifdef PLUGIN_083_DEBUG
       debugRawSignal(currentPulses);
+#endif
 
       // Amplify signal length from 32 (receipt) to 38 (emission)
       RawSignal.Multiply = 38;
