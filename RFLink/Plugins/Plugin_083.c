@@ -106,20 +106,21 @@ boolean Plugin_083(byte function, char *string)
                         +bbuffer[5];
 
          int command = bbuffer[8]*0x10+bbuffer[9];
+         char * commandstring;
 
          switch (command)
          {
          case DOOYA_UP_COMMAND:
-            display_Name(PSTR("CMD=UP"));
+            commandstring = PSTR("CMD=UP");
             break;
          case DOOYA_DOWN_COMMAND:
-            display_Name(PSTR("CMD=DOWN"));
+            commandstring = PSTR("CMD=DOWN");
             break;
          case DOOYA_STOP_COMMAND:
-            display_Name(PSTR("CMD=STOP"));
+            commandstring = PSTR("CMD=STOP");
             break;
          case DOOYA_SETUP_COMMAND:
-            display_Name(PSTR("CMD=SETUP"));
+            commandstring = PSTR("CMD=SETUP");
             break;
          default :
             return false;
@@ -129,6 +130,7 @@ boolean Plugin_083(byte function, char *string)
          display_Name(PSTR("BrelMotor"));
          display_IDn(address, 6);
          display_SWITCH(bbuffer[7]);
+         display_Name(commandstring);
          display_Footer();
       } 
       else 
@@ -350,8 +352,8 @@ boolean PluginTX_083(byte function, char *string)
       debugRawSignal(currentPulses);
 #endif
 
-      // Amplify signal length from 32 (receipt) to 38 (emission)
-      RawSignal.Multiply = 38;
+      // Amplify signal length from 32 (receipt) to 42 (emission)
+      RawSignal.Multiply = 42;
       sendRF(currentPulses);
 
       return true;
