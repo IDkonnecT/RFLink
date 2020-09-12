@@ -110,13 +110,20 @@ void reconnect()
     Serial.println(MQTT_SERVER.c_str());
     Serial.print(F("MQTT Connection :\t"));
 
+  #ifdef MQTT_LWT
+    if (MQTTClient.connect(MQTT_ID.c_str(), MQTT_USER.c_str(), MQTT_PSWD.c_str(), (MQTT_TOPIC_OUT+"/LWT").c_str(), 2, true, "Offline"))
+  #else
     if (MQTTClient.connect(MQTT_ID.c_str(), MQTT_USER.c_str(), MQTT_PSWD.c_str()))
+  #endif
     {
       Serial.println(F("Established"));
       Serial.print(F("MQTT ID :\t\t"));
       Serial.println(MQTT_ID.c_str());
       Serial.print(F("MQTT Username :\t\t"));
       Serial.println(MQTT_USER.c_str());
+    #ifdef MQTT_LWT
+      MQTTClient.publish((MQTT_TOPIC_OUT+"/LWT").c_str(), "Online", true);
+    #endif
     }
     else
     {
