@@ -55,8 +55,10 @@ void setup_WIFI()
 #endif // ESP8266
   WiFi.mode(WIFI_STA);
 
-  // Comment out for Dynamic IP
+  // For Static IP
+#ifndef USE_DHCP
   WiFi.config(ipaddr_addr(WIFI_IP.c_str()), ipaddr_addr(WIFI_GATEWAY.c_str()), ipaddr_addr(WIFI_SUBNET.c_str()));
+#endif // USE_DHCP
 
   // We start by connecting to a WiFi network
   Serial.print(F("WiFi SSID :\t\t"));
