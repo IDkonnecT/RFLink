@@ -100,11 +100,14 @@ boolean FetchSignal()
     }
 
     // ***   Too short Pulse Check   ***
-    if (PulseLength_us < MIN_PULSE_LENGTH_US)
+//***IDkonnecT
+    if (PulseLength_us <= MIN_PULSE_LENGTH_US)
     {
       // NO RawCodeLength++;
-      return false; // Or break; instead, if you think it may worth it.
+      //return false; // Or break; instead, if you think it may worth it.
+      break;
     }
+//IDkonnecT***
 
     // ***   Ending Pulse Check   ***
     if (PulseLength_us > SIGNAL_END_TIMEOUT_US) // Again, in main while this time
