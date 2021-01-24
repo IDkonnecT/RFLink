@@ -26,6 +26,11 @@
 #include "6_WiFi_MQTT.h"
 #include "8_OLED.h"
 
+//***IDkonnecT
+#include "10_WiFiManager_FOTA.h"
+#include "eQ3Thermostat.h"
+//IDkonnecT***
+
 #if (defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__))
 #include <avr/power.h>
 #endif
@@ -84,8 +89,15 @@ void setup()
   Serial.println(F("Compiled on :\t\t" __DATE__ " at " __TIME__));
 
 #ifdef MQTT_ENABLED
+//***IDkonnecT
+#ifndef WIFIMANAGER_ENABLED
   setup_WIFI();
   start_WIFI();
+#else
+  pinMode(PIN_RST_WIFIMANAGER, INPUT_PULLUP);
+  SetUpWiFiManager();
+#endif
+//IDkonnecT***
   setup_MQTT();
   reconnect();
 #else
@@ -120,10 +132,30 @@ void setup()
 #endif
   pbuffer[0] = 0;
   set_Radio_mode(Radio_RX);
+//***IDkonnecT
+#ifdef EQ3THERMOSTAT
+  SetupThermostats();
+  ScanThermostats(20);
+#endif
+//IDkonnecT***
 }
 
 void loop()
 {
+//***IDkonnecT
+#ifdef WIFIMANAGER_ENABLED 
+  if (digitalRead(PIN_RST_WIFIMANAGER)==LOW)
+  {
+    set_Radio_mode(Radio_OFF);  // Shut down interrupts
+    WiFiManagerPortal();        // Launch WiFiManager
+  }
+#endif
+#ifdef EQ3THERMOSTAT
+  // A supprimer si conflit avec les Connect BLE
+  int Periodicite = 1 + millis()/600000; // Toutes les X min à la 10xX ième minute
+  if ((millis()/1000)%(60*Periodicite)==0) ScanThermostats(10);
+#endif
+//IDkonnecT***
 #ifdef MQTT_ENABLED
   checkMQTTloop();
   sendMsg();
