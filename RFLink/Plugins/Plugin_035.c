@@ -51,7 +51,7 @@ boolean Plugin_035(byte function, char *string)
 {
    if (RawSignal.Number != IMAGINTRONIX_PULSECOUNT)
       return false;
-   unsigned int temperature = 0;
+   int temperature = 0;
    unsigned int rc = 0;
 
    byte checksum = 0;
@@ -119,8 +119,11 @@ boolean Plugin_035(byte function, char *string)
       return true; // already seen the RF packet recently
    //==================================================================================
    rc = (data[1]) & 0x3;
-   temperature = ((data[3]) << 4);
-   temperature /= temperature;
+   //***IDkonnecT
+   /*temperature = ((data[3]) << 4);
+   temperature /= temperature;*/
+   temperature = (data[3] - 40) * 10;
+   //IDkonnecT***
    //==================================================================================
    // Output
    //==================================================================================
@@ -128,7 +131,7 @@ boolean Plugin_035(byte function, char *string)
    display_Name(PSTR("Imagintronix"));
    display_IDn(rc, 4);
    display_TEMP(temperature);
-   display_HUM(data[2], HUM_HEX);
+   display_HUM(data[2], HUM_HEX); //***IDkonnecT
    display_Footer();
    //==================================================================================
    RawSignal.Repeats = true; // suppress repeats of the same RF packet
