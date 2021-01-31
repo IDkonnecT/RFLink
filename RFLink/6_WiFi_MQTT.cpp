@@ -118,6 +118,12 @@ void setup_MQTT()
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
+//*** IDkonnecT
+#ifdef EQ3THERMOSTAT
+  extern bool eQ3MQTT(char *topic, byte *payload, unsigned int length);
+  if (eQ3MQTT(topic, payload, length)) return;
+#endif
+//IDkonnecT ***
   payload[length] = 0;
   CheckMQTT(payload);
 }
@@ -195,6 +201,10 @@ void checkMQTTloop()
     {
       // Once connected, resubscribe
       MQTTClient.subscribe(MQTT_TOPIC_IN.c_str());
+      //*** IDkonnecT
+      Serial.print(F("MQTT Subscribe :\t"));
+      Serial.println(MQTT_TOPIC_IN.c_str());
+      // IDkonnecT ***
       bResub = false;
       delay(10);
     }
