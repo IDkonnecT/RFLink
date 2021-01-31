@@ -78,6 +78,9 @@
 // -------------------
 // Misc
 // -------------------
+#define PLUGIN_100 // Harvesting Switch
+#define PLUGIN_101 // FineOffset Rain Station
+#define PLUGIN_102 // FineOffset Wind Station
 // -------------------
 // 868 MHZ
 // -------------------
@@ -96,7 +99,7 @@
 // ------------------------------------------------------------------------
 // #define PLUGIN_TX_003           // Kaku : Klik-Aan-Klik-Uit (with code wheel) aka ARC
 #define PLUGIN_TX_004 // NewKAKU : Klik-Aan-Klik-Uit with automatic coding aka Intertechno.
-// #define PLUGIN_TX_005           // Eurodomest
+#define PLUGIN_TX_005           // Eurodomest
 // #define PLUGIN_TX_006           // Blyss
 // #define PLUGIN_TX_007           // Conrad RSL2
 // #define PLUGIN_TX_008           // Kambrook
