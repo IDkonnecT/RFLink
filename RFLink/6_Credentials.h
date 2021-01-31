@@ -37,15 +37,15 @@ String FOTA_FILE = "http://www.idkonnect.fr/RFLink/firmware.bin";
 
 
 // local AP
-String WIFI_SSID = "your_AP_ssid";
-String WIFI_PSWD = "your_AP_passwd";
+String WIFI_SSID = "xxx";
+String WIFI_PSWD = "xxx";
 
 // DHCP or Static IP
-#define USE_DHCP
+// #define USE_DHCP
 #ifndef USE_DHCP
-String WIFI_IP = "192.168.0.199";
-String WIFI_DNS = "8.8.8.8";
-String WIFI_GATEWAY = "192.168.0.1";
+String WIFI_IP = "192.168.1.xxx";
+String WIFI_DNS = "192.168.1.xxx";
+String WIFI_GATEWAY = "192.168.1.xxx";
 String WIFI_SUBNET = "255.255.255.0";
 #endif
 
@@ -60,5 +60,13 @@ String MQTT_PSWD = "";
 String MQTT_TOPIC_OUT = "msg/RFLink/"+FiltreMac(WiFi.macAddress());
 String MQTT_TOPIC_IN = "cmnd/RFLink/"+FiltreMac(WiFi.macAddress())+"/#"; // Must end with '/#' to read eQ3 commands
 String MQTT_TOPIC_LWT = "msg/RFLink/"+FiltreMac(WiFi.macAddress())+"/LWT";
+
+#ifdef CHECK_CACERT
+static const char ca_cert[] PROGMEM = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIID (...)
+-----END CERTIFICATE-----
+)EOF";
+#endif //CHECK_CACERT
 
 #endif
