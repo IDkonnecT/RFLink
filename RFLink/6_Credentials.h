@@ -12,10 +12,13 @@
 
 #include "RFLink.h"
 
+#if __has_include("6_Credentials_Perso.h")
+#include "6_Credentials_Perso.h"
+#else
 
 #ifdef WIFIMANAGER_ENABLED
 // Device
-const char* DeviceName = "myRFLink";
+const char* DeviceName = "my_RFLink";
 
 // WiFiManager AP
 const char* WiFiManager_SSID = DeviceName;
@@ -55,4 +58,5 @@ String MQTT_TOPIC_OUT = "/RFLink/msg";
 String MQTT_TOPIC_IN = "/RFLink/cmd/#"; // Must end with '/#' to read eQ3 commands
 String MQTT_TOPIC_LWT = "/RFLink/lwt";
 
-#endif
+#endif // if not __has_include("6_Credentials_Perso.h")
+#endif // CREDENTIALS_h
