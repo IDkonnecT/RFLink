@@ -9,7 +9,7 @@
 #include "RFLink.h"
 #ifdef WIFIMANAGER_ENABLED
 
-#include "10_WiFiManager_FOTA.h"
+#include "9_WiFiManager_FOTA.h"
 
 Preferences preferences;
 WiFiManager wifiManager;
