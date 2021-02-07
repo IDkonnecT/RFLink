@@ -11,6 +11,13 @@
 #define BUILDNR 0x05 // 0x07       // shown in version
 #define REVNR 0x01   // 0X42       // shown in version and startup string
 
+//***IDkonnecT
+#define WIFIMANAGER_ENABLED     // You must choose between AutoConnect or WiFiManager
+#define PIN_RST_WIFIMANAGER 0   // Une this PIN to Reset WiFiManager Settings when put to LOW
+#define FOTA_ENABLED            // Firmware Over The Air update
+#define EQ3THERMOSTAT           // BlueTooth Low Energy protocol for Eqiva eQ3 Thermostat
+//IDkonnecT***
+
 #define SERIAL_ENABLED // Send RFLink messages over Serial
 
 #if (defined(ESP32) || defined(ESP8266))

@@ -25,6 +25,8 @@
 #include "5_Plugin.h"
 #include "6_WiFi_MQTT.h"
 #include "8_OLED.h"
+#include "9_WiFiManager_FOTA.h"
+
 
 #if (defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__))
 #include <avr/power.h>
@@ -84,8 +86,15 @@ void setup()
   Serial.println(F("Compiled on :\t\t" __DATE__ " at " __TIME__));
 
 #ifdef MQTT_ENABLED
+
+#ifndef WIFIMANAGER_ENABLED
   setup_WIFI();
   start_WIFI();
+#else
+  pinMode(PIN_RST_WIFIMANAGER, INPUT_PULLUP);
+  SetUpWiFiManager();
+#endif
+
   setup_MQTT();
   reconnect();
 #else
@@ -124,6 +133,14 @@ void setup()
 
 void loop()
 {
+#ifdef WIFIMANAGER_ENABLED 
+  if (digitalRead(PIN_RST_WIFIMANAGER)==LOW)
+  {
+    set_Radio_mode(Radio_OFF);  // Shut down interrupts
+    WiFiManagerPortal();        // Launch WiFiManager
+  }
+#endif
+
 #ifdef MQTT_ENABLED
   checkMQTTloop();
   sendMsg();
