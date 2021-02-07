@@ -229,6 +229,8 @@ void checkMQTTloop()
     {
       // Once connected, resubscribe
       MQTTClient.subscribe(MQTT_TOPIC_IN.c_str());
+      Serial.print(F("MQTT Subscribe :\t"));
+      Serial.println(MQTT_TOPIC_IN.c_str());
       bResub = false;
       delay(10);
     }
